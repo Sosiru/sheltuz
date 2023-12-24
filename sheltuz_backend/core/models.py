@@ -1,7 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 # Create your models here.
-from base.models import BaseModel, GenericBaseModel, State
+from base.models import BaseModel, GenericBaseModel, State, Country
+from users.models import SheltuzUser
 
 
 class PasswordToken(BaseModel):
@@ -14,27 +15,12 @@ class PasswordToken(BaseModel):
 		return '%s - %s' % (self.user, self.token)
 
 
-class SheltuzUser(models.Model):
-	user = models.ForeignKey(User, on_delete=models.CASCADE)
-	phone_number = models.IntegerField()
-	image = models.ImageField(upload_to='images/', blank=True, null=True)
-	device = models.CharField(max_length=200, blank=True, null=True)
-	state = models.ForeignKey(State, default=State.default_state, on_delete=models.CASCADE)
-
-	REQUIRED_FIELDS = ['username']
-
-	class Meta:
-		verbose_name = "SheltuzUser"
-
-	def __str__(self):
-		return str(self.phone_number)
-
-
 class Category(GenericBaseModel):
 	# parent = models.ForeignKey('Category', null=True, blank=True, on_delete=models.SET_NULL)
 	description = models.TextField(null=True)
 	is_top_category = models.BooleanField(default=False)
 	image = models.ImageField(upload_to='images/', blank=True, null=True)
+	state = models.ForeignKey(State, related_name="category_state", default=State.default_state, on_delete=models.CASCADE)
 
 	class Meta:
 		verbose_name_plural = 'Categories'
@@ -47,7 +33,25 @@ class Category(GenericBaseModel):
 		return self.name
 
 
+	@classmethod
+	def default_category(cls):
+		"""
+		The default Active state.
+		@return: The active state, if it exists, or create a new one if it doesn't exist.
+		@rtype: str | None
+		"""
+		# noinspection PyBroadException
+		try:
+			state = cls.objects.get(name='Fashion')
+			return state.id
+		except Exception:
+			pass
+
+
 class Location(GenericBaseModel):
+	country = models.ForeignKey(Country, default=Country.default_country, on_delete=models.CASCADE)
+	estate = models.CharField(max_length=30, default="Juja", blank=False)
+	state = models.ForeignKey(State, related_name="location_state", default=State.default_state, on_delete=models.CASCADE)
 
 	class Meta:
 		indexes = [
@@ -56,6 +60,20 @@ class Location(GenericBaseModel):
 
 	def __str__(self):
 		return self.name
+
+	@classmethod
+	def default_location(cls):
+		"""
+		The default Active state.
+		@return: The active state, if it exists, or create a new one if it doesn't exist.
+		@rtype: str | None
+		"""
+		# noinspection PyBroadException
+		try:
+			location= cls.objects.get(name='Nairobi')
+			return location.id
+		except Exception:
+			pass
 
 
 class AD(GenericBaseModel):
@@ -66,16 +84,14 @@ class AD(GenericBaseModel):
 	description = models.TextField()
 	location = models.ForeignKey(Location, null=True, blank=True, on_delete=models.SET_NULL)
 	model = models.CharField(max_length=30, null=True)
-	further_location = models.CharField(max_length=30, default="Juja", blank=False)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
-	author = models.ForeignKey('SheltuzUser', null=True, blank=True, on_delete=models.CASCADE)
+	author = models.ForeignKey(SheltuzUser, null=True, blank=True, on_delete=models.CASCADE)
 	image = models.ImageField('images', null=True, blank=True)
 	gallery_image_1 = models.ImageField('images', null=True, blank=True)
 	gallery_image_2 = models.ImageField('images', null=True, blank=True)
 	gallery_image_3 = models.ImageField('images', null=True, blank=True)
-	is_purchased = models.BooleanField(default=False)
-	# state = models.ForeignKey(State, default=State.default_state, on_delete=models.CASCADE)
+	state = models.ForeignKey(State, related_name="ad_state", default=State.default_state,on_delete=models.CASCADE)
 
 	class Meta:
 		ordering = ('-date_created',)
@@ -92,7 +108,7 @@ class AD(GenericBaseModel):
 
 
 class ADBid(GenericBaseModel):
-	sheltuzUser = models.ForeignKey('SheltuzUser', on_delete=models.PROTECT)
+	sheltuzUser = models.ForeignKey(SheltuzUser, on_delete=models.PROTECT)
 	ad_product = models.ForeignKey('AD', on_delete=models.CASCADE)
 	state = models.ForeignKey(State, default=State.default_state, on_delete=models.CASCADE)
 
@@ -107,11 +123,4 @@ class ADBid(GenericBaseModel):
 		return str(self.ad_product) + " " + self.ad_product.name
 
 
-class SiteSetting(models.Model):
-	page_link = models.CharField(max_length=300)
-	seo_txt = models.CharField(max_length=200)
-	seo_keyword = models.TextField(default="...")
-	author = models.CharField(max_length=50, default="sheltuz")
 
-	def __str__(self):
-		return self.seo_txt

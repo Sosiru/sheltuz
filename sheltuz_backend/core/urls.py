@@ -1,18 +1,18 @@
 from django.urls import path
-from .views import *
+from .views import GetResponse
 
 
 urlpatterns = [
-    # path('', index,  name="index"),
-    # path('signout/', signout, name="signout"),
-    # path('signin/', signin, name="signin"),
-    # path('quick_signin/', signin_ajax, name="quick_signin"),
-    # path('register/', register, name="register"),
-    # path('quick_register/', register_ajax, name="quick_register"),
-    # path('account/profile/', profile, name="profile"),
-    # path('account/', account, name="account"),
-    # path('ad_details/<slug:slug>/', ad_details, name="ad_details"),
-    # path('my_ads/', my_ads, name="my_ads"),
-    # path('create_ad/', create_ad, name="create_ad"),
-    # path('update_ad/', update_ad, name="update_ad"),
+    path('adverts/', GetResponse.get_adverts,  name="adverts"),
+    path('details/', GetResponse.get_details,  name="details"),
+    path('create-ad/', GetResponse.get_create_advert,  name="create-ad"),
+    path('create-ad-bid/', GetResponse.get_create_ad_bid,  name="create-ad-bid"),
+    path('related-ads/', GetResponse.get_all_related_adverts,  name="related-ads"),
+    path('user-ads/', GetResponse.get_user_adverts,  name="user-ads"),
+    path('update-user-ads/', GetResponse.update_user_adverts,  name="update-user-ads"),
+    path('register/', GetResponse.create_sheltuz_user,  name="register"),
+    path('signin/', GetResponse.login_sheltuz_user,  name="signin"),
+    path('signout/', GetResponse.logout_sheltuz_user,  name="signout"),
+    path('acticate/', GetResponse.activate_sheltuz_user,  name="activate"),
+    path('deactivate/', GetResponse.deactivate_sheltuz_user,  name="deactivate"),
 ]
