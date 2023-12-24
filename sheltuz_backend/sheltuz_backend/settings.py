@@ -27,7 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
+EMAIL_HOST_USER = ""
 # Application definition
 
 INSTALLED_APPS = [
@@ -40,6 +40,10 @@ INSTALLED_APPS = [
     'api',
     'base',
     'core',
+    'users',
+    'settings',
+    'notifications',
+    'orders',
 ]
 
 MIDDLEWARE = [
@@ -75,17 +79,24 @@ WSGI_APPLICATION = 'sheltuz_backend.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
-
+#
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#         'NAME': 'sheltuzbackend',
+#         'USER': 'sheltuzbackend',
+#         'PASSWORD': 'sheltuzbackend',
+#         'HOST': 'localhost',
+#         'PORT': '8000',
+#     }
+# }
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'sheltuzbackend',
-        'USER': 'sheltuzbackend',
-        'PASSWORD': 'sheltuzbackend',
-        'HOST': 'localhost',
-        'PORT': '8000',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
