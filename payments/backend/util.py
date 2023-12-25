@@ -9,11 +9,12 @@ from rest_framework.response import Response
 from phonenumber_field.phonenumber import PhoneNumber
 
 from base.backend.service import PaymentTransactionService
-from sheltuz.settings import env
-from payments.models import PaymentTransaction as Transaction
+from sheltuz import  settings
 from .serializers import TransactionSerializer
 
 logging = logging.getLogger("default")
+now = datetime.now()
+
 
 class MpesaGateWay:
     shortcode = None
@@ -26,19 +27,18 @@ class MpesaGateWay:
     timestamp = None
 
     def __init__(self):
-        now = datetime.now()
-        self.shortcode = env("shortcode")
-        self.consumer_key = env("consumer_key")
-        self.consumer_secret = env("consumer_secret")
-        self.access_token_url = env("access_token_url")
-
+        self.consumer_key = settings.consumer_key
+        print(self.consumer_key)
+        self.consumer_secret = settings.consumer_secret
+        self.access_token_url = settings.access_token_url
+        self.shortcode = settings.shortcode
         self.password = self.generate_password()
-        self.c2b_callback = env("c2b_callback")
-        self.checkout_url = env("checkout_url")
+        self.c2b_callback = settings.mpesa_query_check_url
+        self.checkout_url = settings.querycheckout_url
         self.transaction_service = PaymentTransactionService()
-
+        self.headers = None
         try:
-            self.access_token = self.getAccessToken()
+            self.access_token = self.get_access_token()
             if self.access_token is None:
                 raise Exception("Request for access token failed.")
         except Exception as e:
@@ -46,23 +46,24 @@ class MpesaGateWay:
         else:
             self.access_token_expiration = time.time() + 3400
 
-    def getAccessToken(self):
+    def get_access_token(self):
         try:
             res = requests.get(
                 self.access_token_url,
                 auth=HTTPBasicAuth(self.consumer_key, self.consumer_secret),
             )
+            print(res.json())
+            token = res.json()["access_token"]
+            print(token)
+            self.headers = {"Authorization": "Bearer %s" % token}
+            return token
         except Exception as err:
             logging.error("Error {}".format(err))
             raise err
-        else:
-            token = res.json()["access_token"]
-            self.headers = {"Authorization": "Bearer %s" % token}
-            return token
 
     class Decorators:
         @staticmethod
-        def refreshToken(decorated):
+        def refresh_token(decorated):
             def wrapper(gateway, *args, **kwargs):
                 if (
                     gateway.access_token_expiration
@@ -76,12 +77,12 @@ class MpesaGateWay:
 
     def generate_password(self):
         """Generates mpesa api password using the provided shortcode and passkey"""
-        self.timestamp = time.strftime("%Y%m%d%H%M%S")
-        password_str = env("shortcode") + env("pass_key") + self.timestamp
+        self.timestamp = now.strftime("%Y%m%d%H%M%S")
+        password_str = self.shortcode + settings.pass_key + self.timestamp
         password_bytes = password_str.encode("ascii")
         return base64.b64encode(password_bytes).decode("utf-8")
 
-    @Decorators.refreshToken
+    @Decorators.refresh_token
     def stk_push_request(self, payload):
         request = payload["request"]
         data = payload["data"]
@@ -111,7 +112,6 @@ class MpesaGateWay:
         if res.ok:
             data["ip"] = request.META.get("REMOTE_ADDR")
             data["checkout_request_id"] = res_data["CheckoutRequestID"]
-
             self.transaction_service.create(**data)
         return res_data
 
@@ -125,13 +125,13 @@ class MpesaGateWay:
 
     def get_transaction_object(self, data):
         checkout_request_id = data["Body"]["stkCallback"]["CheckoutRequestID"]
-        transaction, _ = self.transaction_service.get_or_create(
-            checkout_request_id=checkout_request_id
-        )
-
+        transaction = self.transaction_service.get(checkout_request_id=checkout_request_id)
         return transaction
 
     def handle_successful_pay(self, data, transaction):
+        amount = None
+        phone_number = None
+        receipt_no = None
         items = data["Body"]["stkCallback"]["CallbackMetadata"]["Item"]
         for item in items:
             if item["Name"] == "Amount":
@@ -145,13 +145,12 @@ class MpesaGateWay:
         transaction.phone_number = PhoneNumber(raw_input=phone_number)
         transaction.receipt_no = receipt_no
         transaction.confirmed = True
-
         return transaction
 
     def callback_handler(self, data):
         status = self.check_status(data)
         transaction = self.get_transaction_object(data)
-        if status==0:
+        if status == 0:
             self.handle_successful_pay(data, transaction)
         else:
             transaction.status = 1

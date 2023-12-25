@@ -5,8 +5,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from backend.serializers import MpesaCheckoutSerializer
-from backend.util import MpesaGateWay
+from payments.backend.serializers import MpesaCheckoutSerializer
+from payments.backend.util import MpesaGateWay
 
 gateway = MpesaGateWay()
 

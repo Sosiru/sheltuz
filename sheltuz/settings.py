@@ -25,12 +25,21 @@ SECRET_KEY = 'django-insecure-6j#u^q-ff$#o%l^47zj-s)h*rwk4hpfldva1yw@6jysf&a*&p(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 EMAIL_HOST_USER = ""
 # Application definition
 DEFAULT_COUNTRY_CODE = "254"
 PHONE_NUMBER_LENGTH = 12
+
+consumer_key = "I6EAACNFbc34OnCjy7gFt5xOd4bfYVs1"
+consumer_secret = "PFLu5cx2GIcs8Wc2"
+shortcode="174379"
+pass_key="bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919 "
+access_token_url="https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
+mpesa_query_check_url="https://api.safaricom.co.ke/mpesa/stkpushquery/v1/"
+querycheckout_url="https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
+# environ.Env.
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -144,6 +153,5 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-env = environ.Env(DEBUG=(bool, False))
-environ.Env.read_env()
+
 
