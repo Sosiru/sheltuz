@@ -5,7 +5,7 @@ from django.http import JsonResponse
 
 from base.backend.service import StateService, NotificationService
 from core.backend.status import SheltuzNotify
-from sheltuz_backend import settings
+from sheltuz import settings
 
 notify = SheltuzNotify()
 
