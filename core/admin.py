@@ -1,8 +1,9 @@
 from django.contrib import admin
+from django.contrib.auth.models import User
 
 from core.models import AD, Location, Category, ADBid
 
-
+admin.site.unregister(User)
 # Register your models here.
 @admin.register(AD)
 class ADAdmin(admin.ModelAdmin):

@@ -5,10 +5,11 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from backend.serializers import MpesaCheckoutSerializer
-from backend.util import MpesaGateWay
+from payments.backend.serializers import MpesaCheckoutSerializer
+from payments.backend.util import MpesaGateWay
 
 gateway = MpesaGateWay()
+
 
 @authentication_classes([])
 @permission_classes((AllowAny,))
@@ -21,6 +22,7 @@ class MpesaCheckout(APIView):
             payload = {"data":serializer.validated_data, "request":request}
             res = gateway.stk_push_request(payload)
             return Response(res, status=200)
+
 
 @authentication_classes([])
 @permission_classes((AllowAny,))

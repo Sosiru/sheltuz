@@ -6,7 +6,7 @@ from payments import models
 
 class MpesaCheckoutSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.Transaction
+        model = models.PaymentTransaction
         fields = (
             "phone_number",
             "amount",
@@ -24,7 +24,6 @@ class MpesaCheckoutSerializer(serializers.ModelSerializer):
             validate_possible_number(phone_number, "KE")
         except ValidationError:
             raise serializers.ValidationError({"error": "Phone number is not valid"})
-
         return phone_number
 
     def validate_amount(self, amount):
@@ -50,5 +49,5 @@ class MpesaCheckoutSerializer(serializers.ModelSerializer):
 
 class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.Transaction
+        model = models.PaymentTransaction
         fields = "__all__"
