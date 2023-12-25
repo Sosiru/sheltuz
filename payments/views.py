@@ -10,6 +10,7 @@ from backend.util import MpesaGateWay
 
 gateway = MpesaGateWay()
 
+
 @authentication_classes([])
 @permission_classes((AllowAny,))
 class MpesaCheckout(APIView):
@@ -21,6 +22,7 @@ class MpesaCheckout(APIView):
             payload = {"data":serializer.validated_data, "request":request}
             res = gateway.stk_push_request(payload)
             return Response(res, status=200)
+
 
 @authentication_classes([])
 @permission_classes((AllowAny,))

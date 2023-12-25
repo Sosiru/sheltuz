@@ -6,18 +6,14 @@ from datetime import datetime
 import requests
 from requests.auth import HTTPBasicAuth
 from rest_framework.response import Response
-# from phonenumber_field.phonenumber import PhoneNumber
+from phonenumber_field.phonenumber import PhoneNumber
 
+from base.backend.service import PaymentTransactionService
 from sheltuz.settings import env
 from payments.models import PaymentTransaction as Transaction
 from .serializers import TransactionSerializer
 
 logging = logging.getLogger("default")
-
-access_token_url = env("access_token_url")
-consumer_key = env("consumer_key")
-consumer_secret = env("consumer_secret")
-requests.get(access_token_url,auth=HTTPBasicAuth(consumer_key, consumer_secret))
 
 class MpesaGateWay:
     shortcode = None
@@ -29,7 +25,6 @@ class MpesaGateWay:
     checkout_url = None
     timestamp = None
 
-
     def __init__(self):
         now = datetime.now()
         self.shortcode = env("shortcode")
@@ -40,6 +35,7 @@ class MpesaGateWay:
         self.password = self.generate_password()
         self.c2b_callback = env("c2b_callback")
         self.checkout_url = env("checkout_url")
+        self.transaction_service = PaymentTransactionService()
 
         try:
             self.access_token = self.getAccessToken()
@@ -78,10 +74,9 @@ class MpesaGateWay:
 
             return wrapper
 
-
     def generate_password(self):
         """Generates mpesa api password using the provided shortcode and passkey"""
-        self.timestamp = now.strftime("%Y%m%d%H%M%S")
+        self.timestamp = time.strftime("%Y%m%d%H%M%S")
         password_str = env("shortcode") + env("pass_key") + self.timestamp
         password_bytes = password_str.encode("ascii")
         return base64.b64encode(password_bytes).decode("utf-8")
@@ -117,7 +112,7 @@ class MpesaGateWay:
             data["ip"] = request.META.get("REMOTE_ADDR")
             data["checkout_request_id"] = res_data["CheckoutRequestID"]
 
-            Transaction.objects.create(**data)
+            self.transaction_service.create(**data)
         return res_data
 
     def check_status(self, data):
@@ -128,9 +123,9 @@ class MpesaGateWay:
             status = 1
         return status
 
-    def get_transaction_object(data):
+    def get_transaction_object(self, data):
         checkout_request_id = data["Body"]["stkCallback"]["CheckoutRequestID"]
-        transaction, _ = Transaction.objects.get_or_create(
+        transaction, _ = self.transaction_service.get_or_create(
             checkout_request_id=checkout_request_id
         )
 
@@ -147,7 +142,7 @@ class MpesaGateWay:
                 phone_number = item["Value"]
 
         transaction.amount = amount
-        transaction.phone_number = phone_number
+        transaction.phone_number = PhoneNumber(raw_input=phone_number)
         transaction.receipt_no = receipt_no
         transaction.confirmed = True
 

@@ -8,6 +8,7 @@ from base.backend.servicebase import ServiceBase
 from base.models import State, AccountFieldType, PaymentMethod, Country, Transaction, TransactionType
 from core.models import AD, ADBid, Category, Location, PasswordToken
 from notifications.models import NotificationBase
+from payments.models import PaymentTransaction
 from settings.models import SiteSetting
 from users.models import SheltuzUser
 from orders.models import Order, OrderItem, Cart, Wishlist
@@ -105,3 +106,6 @@ class CartService(ServiceBase):
 
 class WishlistService(ServiceBase):
 	manager = Wishlist.objects
+
+class PaymentTransactionService(ServiceBase):
+	manager = PaymentTransaction.objects
